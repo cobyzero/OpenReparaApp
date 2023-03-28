@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:openrepara_app/common/appbar.dart';
 import 'package:openrepara_app/common/creditos.dart';
+import 'package:openrepara_app/controllers/homeController.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,28 +25,59 @@ class _HomePageState extends State<HomePage> {
                 title: "OpenRepara",
               ),
               SizedBox(
-                width: double.infinity,
-                height: 450,
-                child: GridView(
-                  padding: const EdgeInsets.all(20),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, crossAxisSpacing: 20, mainAxisSpacing: 20),
-                  children: [
-                    containerSeccion("clientes", Icons.person, 2, "Registrados", () {
-                      Navigator.pushNamed(context, "clientes");
-                    }),
-                    containerSeccion("inventario", Icons.inventory_2, 1, "Registrados", () {
-                      Navigator.pushNamed(context, "inventorio");
-                    }),
-                    containerSeccion("ordenes", Icons.description, 1, "Registrados", () {
-                      Navigator.pushNamed(context, "ordenes");
-                    }),
-                    containerSeccion("ventas", Icons.payment, 800, "S/.", () {
-                      Navigator.pushNamed(context, "ventas");
-                    }),
-                  ],
-                ),
-              ),
+                  width: double.infinity,
+                  height: 450,
+                  child: FutureBuilder(
+                    future: HomeController.getData(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return GridView(
+                          padding: const EdgeInsets.all(20),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2, crossAxisSpacing: 20, mainAxisSpacing: 20),
+                          children: [
+                            containerSeccion(
+                                "clientes", Icons.person, snapshot.data![0], "Registrados", () {
+                              Navigator.pushNamed(context, "clientes");
+                            }),
+                            containerSeccion(
+                                "inventario", Icons.inventory_2, snapshot.data![1], "Registrados",
+                                () {
+                              Navigator.pushNamed(context, "inventorio");
+                            }),
+                            containerSeccion(
+                                "ordenes", Icons.description, snapshot.data![2], "Registrados", () {
+                              Navigator.pushNamed(context, "ordenes");
+                            }),
+                            containerSeccion("ventas", Icons.payment, snapshot.data![3], "S/.", () {
+                              Navigator.pushNamed(context, "ventas");
+                            }),
+                          ],
+                        );
+                      } else {
+                        return GridView(
+                          padding: const EdgeInsets.all(20),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2, crossAxisSpacing: 20, mainAxisSpacing: 20),
+                          children: [
+                            containerSeccion("clientes", Icons.person, "0", "Registrados", () {
+                              Navigator.pushNamed(context, "clientes");
+                            }),
+                            containerSeccion("inventario", Icons.inventory_2, "0", "Registrados",
+                                () {
+                              Navigator.pushNamed(context, "inventorio");
+                            }),
+                            containerSeccion("ordenes", Icons.description, "0", "Registrados", () {
+                              Navigator.pushNamed(context, "ordenes");
+                            }),
+                            containerSeccion("ventas", Icons.payment, "0", "S/.", () {
+                              Navigator.pushNamed(context, "ventas");
+                            }),
+                          ],
+                        );
+                      }
+                    },
+                  )),
               const MyCreditos()
             ],
           ),
@@ -54,7 +86,7 @@ class _HomePageState extends State<HomePage> {
     ));
   }
 
-  containerSeccion(String titulo, IconData icon, int numero, String texto, Function() fun) {
+  containerSeccion(String titulo, IconData icon, String numero, String texto, Function() fun) {
     return InkWell(
       onTap: fun,
       child: Container(

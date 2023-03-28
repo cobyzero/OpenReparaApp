@@ -7,12 +7,14 @@ class MyTextFormField extends StatelessWidget {
       this.icon,
       this.style = true,
       this.readOnly = false,
-      this.oscure = false});
+      this.oscure = false,
+      this.controller});
   String texto;
   IconData? icon;
   bool style;
   bool readOnly;
   bool oscure;
+  TextEditingController? controller;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -20,6 +22,7 @@ class MyTextFormField extends StatelessWidget {
       width: 300,
       height: 60,
       child: TextFormField(
+        controller: controller,
         obscureText: oscure,
         readOnly: readOnly,
         decoration: InputDecoration(

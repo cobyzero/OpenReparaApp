@@ -4,6 +4,7 @@ import 'package:openrepara_app/common/creditos.dart';
 import 'package:openrepara_app/common/dataTable.dart';
 import 'package:openrepara_app/common/elevatedButton.dart';
 import 'package:openrepara_app/common/textFormField.dart';
+import 'package:openrepara_app/controllers/clientesController.dart';
 import 'package:openrepara_app/models/clientesModel.dart';
 
 class ClientesPage extends StatefulWidget {
@@ -14,24 +15,13 @@ class ClientesPage extends StatefulWidget {
 }
 
 class _ClientesPageState extends State<ClientesPage> {
+  var buscar = TextEditingController();
+  var nombre = TextEditingController();
+  var correo = TextEditingController();
+  var telefono = TextEditingController();
+
   List<String> columns = ["Codigo", "Nombre", "Correo", "Telefono", "Acciones"];
-  List<ClientesModel> data = [
-    ClientesModel(0, "KDOS1", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS2", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS1", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS2", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS1", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS2", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-    ClientesModel(0, "KDOS", "Sebastian", "edyne@dasd.com", "832732832"),
-  ];
+  List<ClientesModel> data = [];
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -47,17 +37,34 @@ class _ClientesPageState extends State<ClientesPage> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    MyTextFormField(texto: "Buscar por Codigo", icon: Icons.person),
+                    MyTextFormField(
+                        controller: buscar, texto: "Buscar por Codigo", icon: Icons.person),
                     IconButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          if (buscar.text.isEmpty) return;
+                          List<ClientesModel> dataTemp =
+                              await ClientesController.getClienteForCode(buscar.text);
+
                           setState(() {
-                            data = data.where((element) => element.codigo == "KDOS").toList();
+                            data = dataTemp;
                           });
                         },
                         icon: const Icon(Icons.search))
                   ],
                 ),
               ),
+              MyElevatedButton(
+                  fun: () async {
+                    setState(() {
+                      data.clear();
+                    });
+                    var dataTemp = await ClientesController.getData();
+
+                    setState(() {
+                      data = dataTemp;
+                    });
+                  },
+                  texto: "Cargar"),
               Expanded(
                   child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -75,10 +82,10 @@ class _ClientesPageState extends State<ClientesPage> {
     List<DataRow> rows = [];
     for (var element in data) {
       rows.add(DataRow(cells: [
-        DataCell(Text(element.codigo)),
-        DataCell(Text(element.nombre)),
-        DataCell(Text(element.correo)),
-        DataCell(Text(element.telefono)),
+        DataCell(Text(element.code!)),
+        DataCell(Text(element.name!)),
+        DataCell(Text(element.email!)),
+        DataCell(Text(element.number!)),
         DataCell(Row(
           children: [
             IconButton(
@@ -90,6 +97,7 @@ class _ClientesPageState extends State<ClientesPage> {
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
+                ClientesController.deleteCliente(element);
                 setState(() {
                   data.remove(element);
                 });
@@ -103,6 +111,9 @@ class _ClientesPageState extends State<ClientesPage> {
   }
 
   editCliente(ClientesModel clientesModel) {
+    nombre.text = clientesModel.name!;
+    correo.text = clientesModel.email!;
+    telefono.text = clientesModel.number!;
     showDialog(
       context: context,
       builder: (context) {
@@ -112,22 +123,47 @@ class _ClientesPageState extends State<ClientesPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Editar Cliente ${clientesModel.codigo}",
+                "Editar Cliente ${clientesModel.code}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               MyTextFormField(
+                controller: nombre,
                 texto: "Nombre",
                 style: false,
               ),
               MyTextFormField(
+                controller: correo,
                 texto: "Correo",
                 style: false,
               ),
               MyTextFormField(
+                controller: telefono,
                 texto: "Telefono",
                 style: false,
               ),
-              MyElevatedButton(fun: () {}, texto: "Guardar")
+              MyElevatedButton(
+                  fun: () async {
+                    clientesModel.name = nombre.text;
+                    clientesModel.email = correo.text;
+                    clientesModel.number = telefono.text;
+
+                    ClientesController.putCliente(clientesModel);
+
+                    nombre.text = "";
+                    correo.text = "";
+                    telefono.text = "";
+
+                    Navigator.pop(context);
+                    setState(() {
+                      data.clear();
+                    });
+                    var dataTemp = await ClientesController.getData();
+
+                    setState(() {
+                      data = dataTemp;
+                    });
+                  },
+                  texto: "Guardar")
             ],
           ),
         ));
