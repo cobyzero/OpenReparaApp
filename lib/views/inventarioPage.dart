@@ -5,6 +5,7 @@ import 'package:openrepara_app/common/creditos.dart';
 import 'package:openrepara_app/common/dataTable.dart';
 import 'package:openrepara_app/common/elevatedButton.dart';
 import 'package:openrepara_app/common/textFormField.dart';
+import 'package:openrepara_app/controllers/inventarioController.dart';
 import 'package:openrepara_app/models/inventarioModel.dart';
 
 class InventorioPage extends StatefulWidget {
@@ -15,6 +16,14 @@ class InventorioPage extends StatefulWidget {
 }
 
 class _InventorioPageState extends State<InventorioPage> {
+  var buscar = TextEditingController();
+  var marca = TextEditingController();
+  var modelo = TextEditingController();
+  var serie = TextEditingController();
+  var imei = TextEditingController();
+  var descripcion = TextEditingController();
+  var tipo = TextEditingController();
+
   List<String> columns = [
     "Codigo",
     "Marca",
@@ -26,9 +35,7 @@ class _InventorioPageState extends State<InventorioPage> {
     "Acciones"
   ];
 
-  List<InventarioModel> data = [
-    InventarioModel(0, "SKEO", "Motorola", "M21", "123123123", "31231323", "NA", "Celular")
-  ];
+  List<InventarioModel> data = [];
 
   @override
   Widget build(BuildContext context) {
@@ -45,17 +52,29 @@ class _InventorioPageState extends State<InventorioPage> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    MyTextFormField(texto: "Buscar", icon: Icons.mobile_friendly),
+                    MyTextFormField(
+                        controller: buscar, texto: "Buscar", icon: Icons.mobile_friendly),
                     IconButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          if (buscar.text.isEmpty) return;
+                          var dataTemp = await InventarioController.getClienteForCode(buscar.text);
+
                           setState(() {
-                            data = data.where((element) => element.codigo == "KDOS").toList();
+                            data = dataTemp;
                           });
                         },
                         icon: const Icon(Icons.search))
                   ],
                 ),
               ),
+              MyElevatedButton(
+                  fun: () async {
+                    var dataTemp = await InventarioController.getInventario();
+                    setState(() {
+                      data = dataTemp;
+                    });
+                  },
+                  texto: "Cargar Inventario"),
               Expanded(
                 child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -79,13 +98,13 @@ class _InventorioPageState extends State<InventorioPage> {
     List<DataRow> rows = [];
     for (var element in data) {
       rows.add(DataRow(cells: [
-        DataCell(Text(element.codigo)),
-        DataCell(Text(element.marca)),
-        DataCell(Text(element.modelo)),
-        DataCell(Text(element.serie)),
-        DataCell(Text(element.imei)),
-        DataCell(Text(element.descripcion)),
-        DataCell(Text(element.tipo)),
+        DataCell(Text(element.code!)),
+        DataCell(Text(element.marca!)),
+        DataCell(Text(element.model!)),
+        DataCell(Text(element.serial!)),
+        DataCell(Text(element.imei!)),
+        DataCell(Text(element.description!)),
+        DataCell(Text(element.type!)),
         DataCell(Row(
           children: [
             IconButton(
@@ -119,30 +138,36 @@ class _InventorioPageState extends State<InventorioPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Editar Inventario ${clientesModel.codigo}",
+                "Editar Inventario ${clientesModel.code}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               MyTextFormField(
+                controller: marca,
                 texto: "Marca",
                 style: false,
               ),
               MyTextFormField(
+                controller: modelo,
                 texto: "Modelo",
                 style: false,
               ),
               MyTextFormField(
+                controller: serie,
                 texto: "Serie",
                 style: false,
               ),
               MyTextFormField(
+                controller: imei,
                 texto: "IMEI",
                 style: false,
               ),
               MyTextFormField(
+                controller: descripcion,
                 texto: "Descripcion",
                 style: false,
               ),
               MyTextFormField(
+                controller: tipo,
                 texto: "Tipo",
                 style: false,
               ),

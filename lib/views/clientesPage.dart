@@ -22,6 +22,7 @@ class _ClientesPageState extends State<ClientesPage> {
 
   List<String> columns = ["Codigo", "Nombre", "Correo", "Telefono", "Acciones"];
   List<ClientesModel> data = [];
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
