@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 class MyAppBar extends StatelessWidget {
-  MyAppBar({super.key, required this.title});
+  MyAppBar({super.key, required this.title, this.home = false});
   String title;
+  bool home;
   @override
   Widget build(BuildContext context) {
     return Column(

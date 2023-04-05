@@ -1,11 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:openrepara_app/common/appbar.dart';
 import 'package:openrepara_app/common/creditos.dart';
 import 'package:openrepara_app/common/dataTable.dart';
 import 'package:openrepara_app/common/elevatedButton.dart';
 import 'package:openrepara_app/common/textFormField.dart';
-import 'package:openrepara_app/controllers/clientesController.dart';
-import 'package:openrepara_app/models/clientesModel.dart';
+import 'package:openrepara_app/viewModel/clientViewModel.dart';
 
 class ClientesPage extends StatefulWidget {
   const ClientesPage({super.key});
@@ -15,13 +16,14 @@ class ClientesPage extends StatefulWidget {
 }
 
 class _ClientesPageState extends State<ClientesPage> {
-  var buscar = TextEditingController();
-  var nombre = TextEditingController();
-  var correo = TextEditingController();
-  var telefono = TextEditingController();
+  var search = TextEditingController();
+  var name = TextEditingController();
+  var email = TextEditingController();
+  var phone = TextEditingController();
 
-  List<String> columns = ["Codigo", "Nombre", "Correo", "Telefono", "Acciones"];
-  List<ClientesModel> data = [];
+  List<String> columns = ["Code", "Name", "Email", "Phone", "Actions"];
+  List<ClientViewModel> data = [];
+  ListClientViewModel listClientesViewModel = ListClientViewModel();
 
   @override
   Widget build(BuildContext context) {
@@ -32,22 +34,22 @@ class _ClientesPageState extends State<ClientesPage> {
           child: Column(
             children: [
               MyAppBar(
-                title: "Clientes",
+                title: "Clients",
               ),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
                     MyTextFormField(
-                        controller: buscar, texto: "Buscar por Codigo", icon: Icons.person),
+                        controller: search, texto: "Search by code", icon: Icons.person),
                     IconButton(
                         onPressed: () async {
-                          if (buscar.text.isEmpty) return;
-                          List<ClientesModel> dataTemp =
-                              await ClientesController.getClienteForCode(buscar.text);
+                          if (search.text.isEmpty) return;
+
+                          await listClientesViewModel.getClienteForCode(search.text);
 
                           setState(() {
-                            data = dataTemp;
+                            data = listClientesViewModel.clientViewModel!;
                           });
                         },
                         icon: const Icon(Icons.search))
@@ -59,19 +61,18 @@ class _ClientesPageState extends State<ClientesPage> {
                     setState(() {
                       data.clear();
                     });
-                    var dataTemp = await ClientesController.getData();
 
-                    setState(() {
-                      data = dataTemp;
-                    });
+                    await listClientesViewModel.getData().whenComplete(() => setState(() {
+                          data = listClientesViewModel.clientViewModel!;
+                        }));
                   },
-                  texto: "Cargar"),
+                  texto: "Load"),
               Expanded(
                   child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: MyDataTable(columns: MyDataTable.getColumns(columns), rows: getRows(data)),
               )),
-              const MyCreditos()
+              const MyCredits()
             ],
           ),
         ),
@@ -79,26 +80,26 @@ class _ClientesPageState extends State<ClientesPage> {
     );
   }
 
-  getRows(List<ClientesModel> data) {
+  getRows(List<ClientViewModel> data) {
     List<DataRow> rows = [];
     for (var element in data) {
       rows.add(DataRow(cells: [
-        DataCell(Text(element.code!)),
-        DataCell(Text(element.name!)),
-        DataCell(Text(element.email!)),
-        DataCell(Text(element.number!)),
+        DataCell(Text(element.clientModel.code!)),
+        DataCell(Text(element.clientModel.name!)),
+        DataCell(Text(element.clientModel.email!)),
+        DataCell(Text(element.clientModel.number!)),
         DataCell(Row(
           children: [
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
-                editCliente(element);
+                editClient(element);
               },
             ),
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
-                ClientesController.deleteCliente(element);
+                listClientesViewModel.deleteCliente(element);
                 setState(() {
                   data.remove(element);
                 });
@@ -111,10 +112,10 @@ class _ClientesPageState extends State<ClientesPage> {
     return rows;
   }
 
-  editCliente(ClientesModel clientesModel) {
-    nombre.text = clientesModel.name!;
-    correo.text = clientesModel.email!;
-    telefono.text = clientesModel.number!;
+  editClient(ClientViewModel clientViewModel) {
+    name.text = clientViewModel.clientModel.name!;
+    email.text = clientViewModel.clientModel.email!;
+    phone.text = clientViewModel.clientModel.number!;
     showDialog(
       context: context,
       builder: (context) {
@@ -124,47 +125,47 @@ class _ClientesPageState extends State<ClientesPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Editar Cliente ${clientesModel.code}",
+                "Editar Cliente ${clientViewModel.clientModel.code}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               MyTextFormField(
-                controller: nombre,
+                controller: name,
                 texto: "Nombre",
                 style: false,
               ),
               MyTextFormField(
-                controller: correo,
+                controller: email,
                 texto: "Correo",
                 style: false,
               ),
               MyTextFormField(
-                controller: telefono,
+                controller: phone,
                 texto: "Telefono",
                 style: false,
               ),
               MyElevatedButton(
                   fun: () async {
-                    clientesModel.name = nombre.text;
-                    clientesModel.email = correo.text;
-                    clientesModel.number = telefono.text;
+                    clientViewModel.clientModel.name = name.text;
+                    clientViewModel.clientModel.email = email.text;
+                    clientViewModel.clientModel.number = phone.text;
 
-                    ClientesController.putCliente(clientesModel);
+                    listClientesViewModel.putCliente(clientViewModel);
 
-                    nombre.text = "";
-                    correo.text = "";
-                    telefono.text = "";
+                    name.text = "";
+                    email.text = "";
+                    phone.text = "";
 
                     Navigator.pop(context);
                     setState(() {
                       data.clear();
                     });
-                    var dataTemp = await ClientesController.getData();
+                    await listClientesViewModel.getData();
 
                     setState(() {
-                      data = dataTemp;
+                      data = listClientesViewModel.clientViewModel!;
                     });
                   },
-                  texto: "Guardar")
+                  texto: "Save")
             ],
           ),
         ));

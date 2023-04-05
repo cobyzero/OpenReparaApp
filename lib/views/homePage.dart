@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:openrepara_app/common/appbar.dart';
 import 'package:openrepara_app/common/creditos.dart';
-import 'package:openrepara_app/controllers/homeController.dart';
+import 'package:openrepara_app/services/homeService.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,13 +22,14 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               MyAppBar(
-                title: "OpenRepara",
+                home: true,
+                title: "OpenRepair",
               ),
               SizedBox(
                   width: double.infinity,
                   height: 450,
                   child: FutureBuilder(
-                    future: HomeController.getData(),
+                    future: HomeService.getHome(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return GridView(
@@ -36,20 +37,17 @@ class _HomePageState extends State<HomePage> {
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2, crossAxisSpacing: 20, mainAxisSpacing: 20),
                           children: [
-                            containerSeccion(
-                                "clientes", Icons.person, snapshot.data![0], "Registrados", () {
-                              Navigator.pushNamed(context, "clientes");
+                            containerSeccion("Clients", Colors.green, snapshot.data![0], () {
+                              Navigator.pushNamed(context, "clientes").then((_) => setState(() {}));
                             }),
-                            containerSeccion(
-                                "inventario", Icons.inventory_2, snapshot.data![1], "Registrados",
-                                () {
-                              Navigator.pushNamed(context, "inventorio");
+                            containerSeccion("Inventory", Colors.blue, snapshot.data![1], () {
+                              Navigator.pushNamed(context, "inventorio")
+                                  .then((_) => setState(() {}));
                             }),
-                            containerSeccion(
-                                "ordenes", Icons.description, snapshot.data![2], "Registrados", () {
-                              Navigator.pushNamed(context, "ordenes");
+                            containerSeccion("Orders", Colors.red, snapshot.data![2], () {
+                              Navigator.pushNamed(context, "ordenes").then((_) => setState(() {}));
                             }),
-                            containerSeccion("ventas", Icons.payment, snapshot.data![3], "S/.", () {
+                            containerSeccion("Sales", Colors.amber, "S/.${snapshot.data![3]}", () {
                               Navigator.pushNamed(context, "ventas");
                             }),
                           ],
@@ -60,17 +58,16 @@ class _HomePageState extends State<HomePage> {
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2, crossAxisSpacing: 20, mainAxisSpacing: 20),
                           children: [
-                            containerSeccion("clientes", Icons.person, "0", "Registrados", () {
+                            containerSeccion("Clients", Colors.green, "0", () {
                               Navigator.pushNamed(context, "clientes");
                             }),
-                            containerSeccion("inventario", Icons.inventory_2, "0", "Registrados",
-                                () {
+                            containerSeccion("Inventory", Colors.blue, "0", () {
                               Navigator.pushNamed(context, "inventorio");
                             }),
-                            containerSeccion("ordenes", Icons.description, "0", "Registrados", () {
+                            containerSeccion("Orders", Colors.red, "0", () {
                               Navigator.pushNamed(context, "ordenes");
                             }),
-                            containerSeccion("ventas", Icons.payment, "0", "S/.", () {
+                            containerSeccion("Sales", Colors.amber, "0", () {
                               Navigator.pushNamed(context, "ventas");
                             }),
                           ],
@@ -78,7 +75,7 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                   )),
-              const MyCreditos()
+              const MyCredits()
             ],
           ),
         ),
@@ -86,7 +83,7 @@ class _HomePageState extends State<HomePage> {
     ));
   }
 
-  containerSeccion(String titulo, IconData icon, String numero, String texto, Function() fun) {
+  containerSeccion(String title, Color color, String number, Function() fun) {
     return InkWell(
       onTap: fun,
       child: Container(
@@ -94,18 +91,16 @@ class _HomePageState extends State<HomePage> {
         height: 120,
         decoration: BoxDecoration(border: Border.all(width: 1, color: Colors.grey)),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              titulo.toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              title.toUpperCase(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
-            Icon(
-              icon,
-              size: 40,
-              color: Colors.blue,
-            ),
-            Text("$numero $texto")
+            Text(
+              number,
+              style: TextStyle(fontSize: 45, color: color),
+            )
           ],
         ),
       ),
