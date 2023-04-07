@@ -155,6 +155,7 @@ class _HomePageState extends State<HomePage> {
 
   containerSeccion(String title, Color color, String image, Function() fun) {
     return InkWell(
+      highlightColor: Colors.black,
       onTap: fun,
       child: Column(
         children: [

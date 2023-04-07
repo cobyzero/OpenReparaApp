@@ -15,9 +15,10 @@ cargando(BuildContext context) {
       return AlertDialog(
         content: SingleChildScrollView(
           child: Column(
-            children: const [
-              Text("Cargando.."),
-              SizedBox(width: 50, height: 50, child: CircularProgressIndicator.adaptive())
+            children: [
+              const Text("Cargando.."),
+              space(h: 20),
+              const SizedBox(width: 50, height: 50, child: CircularProgressIndicator.adaptive())
             ],
           ),
         ),
