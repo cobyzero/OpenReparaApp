@@ -34,3 +34,11 @@ mensajeError(BuildContext context, String texto) {
     },
   );
 }
+
+myprimarycolor() {
+  return const Color(0xff5e5bf4);
+}
+
+mynegroprimary() {
+  return const Color(0xff171717);
+}

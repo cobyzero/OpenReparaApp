@@ -18,18 +18,14 @@ class MyAppBar extends StatelessWidget {
                 icon: const Icon(
                   Icons.logout,
                   size: 30,
+                  color: Colors.white,
                 )),
             Text(
               title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
             )
           ],
-        ),
-        Container(
-          margin: const EdgeInsets.only(bottom: 30),
-          width: double.infinity,
-          height: 2,
-          color: Colors.grey,
         ),
       ],
     );

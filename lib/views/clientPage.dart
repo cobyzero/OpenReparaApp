@@ -1,9 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:openrepara_app/common/appbar.dart';
-import 'package:openrepara_app/common/creditos.dart';
-import 'package:openrepara_app/common/dataTable.dart';
+import 'package:openrepara_app/common/common.dart';
 import 'package:openrepara_app/common/elevatedButton.dart';
 import 'package:openrepara_app/common/textFormField.dart';
 import 'package:openrepara_app/viewModel/clientViewModel.dart';
@@ -22,16 +19,32 @@ class _ClientesPageState extends State<ClientesPage> {
   var phone = TextEditingController();
 
   List<String> columns = ["Code", "Name", "Email", "Phone", "Actions"];
-  List<ClientViewModel> data = [];
+
   ListClientViewModel listClientesViewModel = ListClientViewModel();
+
+  int status = 0;
+
+  getData(int status, String code) async {
+    switch (status) {
+      case 0:
+        await listClientesViewModel.getData();
+        break;
+      case 1:
+        await listClientesViewModel.getClienteForCode(code);
+        break;
+      default:
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: mynegroprimary(),
         body: Container(
           padding: const EdgeInsets.all(20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               MyAppBar(
                 title: "Clients",
@@ -44,19 +57,25 @@ class _ClientesPageState extends State<ClientesPage> {
                         controller: search, texto: "Search by code", icon: Icons.person),
                     IconButton(
                         onPressed: () async {
-                          if (search.text.isEmpty) return;
-
-                          await listClientesViewModel.getClienteForCode(search.text);
+                          if (search.text.isEmpty) {
+                            setState(() {
+                              status = 0;
+                            });
+                            return;
+                          }
 
                           setState(() {
-                            data = listClientesViewModel.clientViewModel!;
+                            status = 1;
                           });
                         },
-                        icon: const Icon(Icons.search))
+                        icon: const Icon(
+                          Icons.search,
+                          color: Colors.white,
+                        ))
                   ],
                 ),
               ),
-              MyElevatedButton(
+              /*MyElevatedButton(
                   fun: () async {
                     setState(() {
                       data.clear();
@@ -66,13 +85,30 @@ class _ClientesPageState extends State<ClientesPage> {
                           data = listClientesViewModel.clientViewModel!;
                         }));
                   },
-                  texto: "Load"),
+                  texto: "Load"),*/
+              space(h: 20),
               Expanded(
+                  child: FutureBuilder(
+                future: getData(status, search.text),
+                builder: (context, snapshot) {
+                  if (listClientesViewModel.clientViewModel != null) {
+                    return ListView.builder(
+                      itemCount: listClientesViewModel.clientViewModel!.length,
+                      itemBuilder: (context, index) {
+                        return itemRegistro(listClientesViewModel.clientViewModel![index]);
+                      },
+                    );
+                  } else {
+                    return Container();
+                  }
+                },
+              ))
+              /*Expanded(
                   child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: MyDataTable(columns: MyDataTable.getColumns(columns), rows: getRows(data)),
               )),
-              const MyCredits()
+              const MyCredits()*/
             ],
           ),
         ),
@@ -80,36 +116,64 @@ class _ClientesPageState extends State<ClientesPage> {
     );
   }
 
-  getRows(List<ClientViewModel> data) {
-    List<DataRow> rows = [];
-    for (var element in data) {
-      rows.add(DataRow(cells: [
-        DataCell(Text(element.clientModel.code!)),
-        DataCell(Text(element.clientModel.name!)),
-        DataCell(Text(element.clientModel.email!)),
-        DataCell(Text(element.clientModel.number!)),
-        DataCell(Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                editClient(element);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                listClientesViewModel.deleteCliente(element);
-                setState(() {
-                  data.remove(element);
-                });
-              },
-            )
-          ],
-        ))
-      ]));
-    }
-    return rows;
+  Container itemRegistro(ClientViewModel clientViewModel) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      width: double.infinity,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                clientViewModel.clientModel.code!,
+                style: TextStyle(color: myprimarycolor()),
+              ),
+              Text(
+                clientViewModel.clientModel.name!,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
+              Text(
+                clientViewModel.clientModel.email!,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              Text(
+                clientViewModel.clientModel.number!,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.edit,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  editClient(clientViewModel);
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+                onPressed: () {
+                  listClientesViewModel
+                      .deleteCliente(clientViewModel)
+                      .whenComplete(() => setState(() {
+                            listClientesViewModel.clientViewModel!.clear();
+                            listClientesViewModel.getData();
+                          }));
+                },
+              ),
+            ],
+          )
+        ],
+      ),
+    );
   }
 
   editClient(ClientViewModel clientViewModel) {
@@ -120,55 +184,54 @@ class _ClientesPageState extends State<ClientesPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+            backgroundColor: mynegroprimary(),
             content: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Editar Cliente ${clientViewModel.clientModel.code}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              MyTextFormField(
-                controller: name,
-                texto: "Nombre",
-                style: false,
-              ),
-              MyTextFormField(
-                controller: email,
-                texto: "Correo",
-                style: false,
-              ),
-              MyTextFormField(
-                controller: phone,
-                texto: "Telefono",
-                style: false,
-              ),
-              MyElevatedButton(
-                  fun: () async {
-                    clientViewModel.clientModel.name = name.text;
-                    clientViewModel.clientModel.email = email.text;
-                    clientViewModel.clientModel.number = phone.text;
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Editar Cliente ${clientViewModel.clientModel.code}",
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  MyTextFormField(
+                    controller: name,
+                    texto: "Nombre",
+                    style: false,
+                  ),
+                  MyTextFormField(
+                    controller: email,
+                    texto: "Correo",
+                    style: false,
+                  ),
+                  MyTextFormField(
+                    controller: phone,
+                    texto: "Telefono",
+                    style: false,
+                  ),
+                  MyElevatedButton(
+                      fun: () async {
+                        clientViewModel.clientModel.name = name.text;
+                        clientViewModel.clientModel.email = email.text;
+                        clientViewModel.clientModel.number = phone.text;
 
-                    listClientesViewModel.putCliente(clientViewModel);
+                        listClientesViewModel.putCliente(clientViewModel);
 
-                    name.text = "";
-                    email.text = "";
-                    phone.text = "";
+                        name.text = "";
+                        email.text = "";
+                        phone.text = "";
 
-                    Navigator.pop(context);
-                    setState(() {
-                      data.clear();
-                    });
-                    await listClientesViewModel.getData();
+                        Navigator.pop(context);
+                        setState(() {
+                          listClientesViewModel.clientViewModel!.clear();
+                        });
+                        await listClientesViewModel.getData();
 
-                    setState(() {
-                      data = listClientesViewModel.clientViewModel!;
-                    });
-                  },
-                  texto: "Save")
-            ],
-          ),
-        ));
+                        setState(() {});
+                      },
+                      texto: "Save")
+                ],
+              ),
+            ));
       },
     );
   }

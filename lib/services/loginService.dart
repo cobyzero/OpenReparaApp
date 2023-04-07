@@ -9,6 +9,7 @@ class LoginService {
         path: "api/checkLogin", queryParameters: {"username": username, "password": password});
 
     http.Response response = await http.get(uri);
+
     UserModel model = UserModel.fromJson(jsonDecode(response.body));
 
     return model;

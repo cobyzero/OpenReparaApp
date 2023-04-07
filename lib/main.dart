@@ -10,6 +10,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: routesApp(),
+      theme: ThemeData(fontFamily: "SpaceMono"),
       debugShowCheckedModeBanner: false,
       initialRoute: "login",
     );

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openrepara_app/common/appbar.dart';
-import 'package:openrepara_app/common/common.dart';
-import 'package:openrepara_app/common/creditos.dart';
-import 'package:openrepara_app/common/dataTable.dart';
+import 'package:openrepara_app/common/common.dart'; 
 import 'package:openrepara_app/common/elevatedButton.dart';
 import 'package:openrepara_app/common/textFormField.dart';
 import 'package:openrepara_app/viewModel/inventoryViewModel.dart';
@@ -16,9 +14,17 @@ class InventoryPage extends StatefulWidget {
 
 class _InventoryPageState extends State<InventoryPage> {
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getData(status, _search.text);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: mynegroprimary(),
         body: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -34,40 +40,41 @@ class _InventoryPageState extends State<InventoryPage> {
                         controller: _search, texto: "Search", icon: Icons.mobile_friendly),
                     IconButton(
                         onPressed: () async {
-                          if (_search.text.isEmpty) return;
-                          await listInventoryViewModel.getClientForCode(_search.text);
+                          if (_search.text.isEmpty) {
+                            setState(() {
+                              status = 0;
+                            });
+                            return;
+                          }
 
                           setState(() {
-                            data = listInventoryViewModel.list!;
+                            status = 1;
                           });
                         },
-                        icon: const Icon(Icons.search))
+                        icon: const Icon(
+                          Icons.search,
+                          color: Colors.white,
+                        ))
                   ],
                 ),
               ),
-              MyElevatedButton(
-                  fun: () async {
-                    setState(() {
-                      data.clear();
-                    });
-                    await listInventoryViewModel.getInventary();
-                    setState(() {
-                      data = listInventoryViewModel.list!;
-                    });
-                  },
-                  texto: "Load"),
+              space(h: 20),
               Expanded(
-                child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child:
-                        MyDataTable(columns: MyDataTable.getColumns(columns), rows: getRows(data))),
-              ),
-              MyElevatedButton(
-                  fun: () {
-                    confirmation();
-                  },
-                  texto: "Clear Inventary"),
-              const MyCredits()
+                  child: FutureBuilder(
+                future: getData(status, _search.text),
+                builder: (context, snapshot) {
+                  if (listInventoryViewModel.list != null) {
+                    return ListView.builder(
+                      itemCount: listInventoryViewModel.list!.length,
+                      itemBuilder: (context, index) {
+                        return itemRegistro(listInventoryViewModel.list![index]);
+                      },
+                    );
+                  } else {
+                    return Container();
+                  }
+                },
+              ))
             ],
           ),
         ),
@@ -75,29 +82,76 @@ class _InventoryPageState extends State<InventoryPage> {
     );
   }
 
-  getRows(List<InventoryViewModel> data) {
-    List<DataRow> rows = [];
-    for (var element in data) {
-      rows.add(DataRow(cells: [
-        DataCell(Text(element.inventoryModel.code!)),
-        DataCell(Text(element.inventoryModel.marca!)),
-        DataCell(Text(element.inventoryModel.model!)),
-        DataCell(Text(element.inventoryModel.imei!)),
-        DataCell(Text(element.inventoryModel.description!)),
-        DataCell(Text(element.inventoryModel.type!)),
-        DataCell(Row(
+  Container itemRegistro(InventoryViewModel clientViewModel) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 30),
+      width: double.infinity,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  clientViewModel.inventoryModel.code!,
+                  style: TextStyle(color: myprimarycolor()),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      clientViewModel.inventoryModel.marca!,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                    space(w: 10),
+                    Text(
+                      clientViewModel.inventoryModel.model!,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Text(
+                      clientViewModel.inventoryModel.type!,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    space(w: 10),
+                    Text(
+                      "[${clientViewModel.inventoryModel.description!}]",
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            space(w: 20),
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(
+                Icons.edit,
+                color: Colors.white,
+              ),
               onPressed: () {
-                editInventary(element);
+                editInventary(clientViewModel);
               },
             ),
           ],
-        ))
-      ]));
+        ),
+      ),
+    );
+  }
+
+  getData(int status, String code) async {
+    switch (status) {
+      case 0:
+        await listInventoryViewModel.getInventory();
+        break;
+      case 1:
+        await listInventoryViewModel.getInventoryForCode(code);
+        break;
+      default:
     }
-    return rows;
   }
 
   editInventary(InventoryViewModel inventoryViewModel) {
@@ -111,97 +165,61 @@ class _InventoryPageState extends State<InventoryPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+            backgroundColor: mynegroprimary(),
             content: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Edit Inventary ${inventoryViewModel.inventoryModel.code}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              MyTextFormField(
-                controller: _marca,
-                texto: "Marca",
-                style: false,
-              ),
-              MyTextFormField(
-                controller: _model,
-                texto: "Model",
-                style: false,
-              ),
-              MyTextFormField(
-                controller: _imei,
-                texto: "IMEI",
-                style: false,
-              ),
-              MyTextFormField(
-                controller: _description,
-                texto: "Description",
-                style: false,
-              ),
-              MyTextFormField(
-                controller: _type,
-                texto: "Type",
-                style: false,
-              ),
-              MyElevatedButton(
-                  fun: () async {
-                    inventoryViewModel.inventoryModel.marca = _marca.text;
-                    inventoryViewModel.inventoryModel.model = _model.text;
-                    inventoryViewModel.inventoryModel.imei = _imei.text;
-                    inventoryViewModel.inventoryModel.description = _description.text;
-                    inventoryViewModel.inventoryModel.type = _type.text;
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Edit Inventary ${inventoryViewModel.inventoryModel.code}",
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  MyTextFormField(
+                    controller: _marca,
+                    texto: "Marca",
+                    style: false,
+                  ),
+                  MyTextFormField(
+                    controller: _model,
+                    texto: "Model",
+                    style: false,
+                  ),
+                  MyTextFormField(
+                    controller: _imei,
+                    texto: "IMEI",
+                    style: false,
+                  ),
+                  MyTextFormField(
+                    controller: _description,
+                    texto: "Description",
+                    style: false,
+                  ),
+                  MyTextFormField(
+                    controller: _type,
+                    texto: "Type",
+                    style: false,
+                  ),
+                  MyElevatedButton(
+                      fun: () async {
+                        inventoryViewModel.inventoryModel.marca = _marca.text;
+                        inventoryViewModel.inventoryModel.model = _model.text;
+                        inventoryViewModel.inventoryModel.imei = _imei.text;
+                        inventoryViewModel.inventoryModel.description = _description.text;
+                        inventoryViewModel.inventoryModel.type = _type.text;
 
-                    listInventoryViewModel
-                        .putInventary(inventoryViewModel)
-                        .whenComplete(() => Navigator.pop(context));
+                        listInventoryViewModel
+                            .putInventory(inventoryViewModel)
+                            .whenComplete(() => Navigator.pop(context));
 
-                    setState(() {
-                      data.clear();
-                    });
-                    await listInventoryViewModel.getInventary();
-                    setState(() {
-                      data = listInventoryViewModel.list!;
-                    });
-                  },
-                  texto: "Save")
-            ],
-          ),
-        ));
-      },
-    );
-  }
-
-  confirmation() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Warning"),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                const Text("The data well be delete."),
-                const Text("Continue?"),
-                space(h: 20),
-                MyElevatedButton(
-                    fun: () {
-                      setState(() {
-                        data.clear();
-                      });
-                      Navigator.pop(context);
-                    },
-                    texto: "Confirm"),
-                space(h: 10),
-                MyElevatedButton(
-                    fun: () {
-                      Navigator.pop(context);
-                    },
-                    texto: "Cancel")
-              ],
-            ),
-          ),
-        );
+                        setState(() {
+                          listInventoryViewModel.list!.clear();
+                          status = 0;
+                        });
+                      },
+                      texto: "Save")
+                ],
+              ),
+            ));
       },
     );
   }
@@ -213,8 +231,6 @@ class _InventoryPageState extends State<InventoryPage> {
   final _description = TextEditingController();
   final _type = TextEditingController();
 
-  List<String> columns = ["Code", "Marca", "Model", "IMEI", "Description", "Type", "Actions"];
-
-  List<InventoryViewModel> data = [];
+  int status = 0;
   ListInventoryViewModel listInventoryViewModel = ListInventoryViewModel();
 }

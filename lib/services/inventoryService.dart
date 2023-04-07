@@ -27,8 +27,8 @@ class InventoryService {
     return posts;
   }
 
-  static Future<void> deleteInventoryForCode(InventoryModel inventoryModel) async {
-    Uri uri = API.getUri(path: "api/deleteInventoryForCode");
+  static Future<void> deleteInventory(InventoryModel inventoryModel) async {
+    Uri uri = API.getUri(path: "api/deleteInventory");
     var json = inventoryModel.toJson();
 
     await http.delete(uri, body: jsonEncode(json));

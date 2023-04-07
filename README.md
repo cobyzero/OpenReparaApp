@@ -1,13 +1,10 @@
 # OpenReparaApp
  Sistema de Servicio Tecnico en flutter.
 
-<img src="https://imgur.com/opDieqY.png" width="200">
-<img src="https://imgur.com/EMpUyk4.png" width="200">
-<img src="https://imgur.com/wHQpLYS.png" width="200">
-<img src="https://imgur.com/El4Vnwx.png" width="200">
-<img src="https://imgur.com/A22NcJJ.png" width="200">
-<img src="https://imgur.com/FnH2zjK.png" width="200">
-<img src="https://imgur.com/VDLstsG.png" width="200">
-<img src="https://imgur.com/pGe9EzW.png" width="200">
-<img src="https://imgur.com/x3iolo4.png" width="200">
-<img src="https://imgur.com/vQ0dIgf.png" width="200">
+<img src="https://imgur.com/pabVX3w.png" width="200">
+<img src="https://imgur.com/g5b7SaJ.png" width="200">
+<img src="https://imgur.com/TpkuIKu.png" width="200">
+<img src="https://imgur.com/JfNrDg5.png" width="200">
+<img src="https://imgur.com/enKYWKu.png" width="200">
+<img src="https://imgur.com/qSRKtzD.png" width="200">
+<img src="https://imgur.com/D4VOWK0.png" width="200"> 

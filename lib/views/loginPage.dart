@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:openrepara_app/common/common.dart';
-import 'package:openrepara_app/common/creditos.dart';
 import 'package:openrepara_app/common/elevatedButton.dart';
 import 'package:openrepara_app/common/localData.dart';
 import 'package:openrepara_app/common/textFormField.dart';
@@ -18,25 +17,41 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: mynegroprimary(),
         body: Container(
           padding: const EdgeInsets.all(20),
           child: Center(
             child: SingleChildScrollView(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [
+                      Text(
+                        "OpenRepair",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 24, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  space(h: 10),
                   /**
                    * Logo
                    */
-                  Image.asset("assets/logo.png"),
-                  /**
-                   * Text [Title]
-                   */
+                  Image.asset(
+                    "assets/charlando.png",
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.3,
+                  ),
                   const Text(
-                    "OpenRepair",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+                    "Welcome back!",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.white),
+                  ),
+                  const Text(
+                    "Login in your account",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white),
                   ),
                   /**
                    * Form [Username]
@@ -60,6 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                    * Button [Login]
                    */
                   MyElevatedButton(
+                    w: 140,
                     fun: () async {
                       cargando(context);
 
@@ -82,10 +98,6 @@ class _LoginPageState extends State<LoginPage> {
                     texto: "Login",
                   ),
                   space(h: 10),
-                  /**
-                   * Credits by Cobyzero
-                   */
-                  const MyCredits()
                 ],
               ),
             ),

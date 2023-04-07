@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openrepara_app/common/appbar.dart';
 import 'package:openrepara_app/common/common.dart';
-import 'package:openrepara_app/common/creditos.dart';
-import 'package:openrepara_app/common/dataTable.dart';
 import 'package:openrepara_app/common/elevatedButton.dart';
 import 'package:openrepara_app/common/textFormField.dart';
 import 'package:openrepara_app/models/orderModel.dart';
@@ -17,9 +15,17 @@ class OrderPage extends StatefulWidget {
 
 class _OrderPageState extends State<OrderPage> {
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getData(status, search.text);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: mynegroprimary(),
         body: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -35,19 +41,26 @@ class _OrderPageState extends State<OrderPage> {
                         controller: search, texto: "Search by code", icon: Icons.person),
                     IconButton(
                         onPressed: () async {
-                          if (search.text.isEmpty) return;
-
-                          await listOrderViewModel.getOrdersForCode(search.text);
+                          listOrderViewModel.list!.clear();
+                          if (search.text.isEmpty) {
+                            setState(() {
+                              status = 0;
+                            });
+                            return;
+                          }
 
                           setState(() {
-                            data = listOrderViewModel.list!;
+                            status = 1;
                           });
                         },
-                        icon: const Icon(Icons.search))
+                        icon: const Icon(
+                          Icons.search,
+                          color: Colors.white,
+                        ))
                   ],
                 ),
               ),
-              MyElevatedButton(
+              /*MyElevatedButton(
                   fun: () async {
                     await listOrderViewModel.getOrders();
                     setState(() {
@@ -62,13 +75,30 @@ class _OrderPageState extends State<OrderPage> {
                   columns: MyDataTable.getColumns(columns),
                   rows: getRows(data),
                 ),
-              )),
+              )),*/
               MyElevatedButton(
                   fun: () {
                     newOrder();
                   },
                   texto: "New Order"),
-              const MyCredits()
+              space(h: 20),
+              Expanded(
+                  child: FutureBuilder(
+                future: getData(status, search.text),
+                builder: (context, snapshot) {
+                  if (listOrderViewModel.list != null) {
+                    return ListView.builder(
+                      itemCount: listOrderViewModel.list!.length,
+                      itemBuilder: (context, index) {
+                        return itemRegistro(listOrderViewModel.list![index]);
+                      },
+                    );
+                  } else {
+                    return Container();
+                  }
+                },
+              ))
+              /*const MyCredits()*/
             ],
           ),
         ),
@@ -76,45 +106,117 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-  getRows(List<OrderViewModel> data) {
-    List<DataRow> rows = [];
-    for (var element in data) {
-      rows.add(DataRow(cells: [
-        DataCell(Text(element.orderModel.code!)),
-        DataCell(Text(element.orderModel.marcaDispositive!)),
-        DataCell(Text(element.orderModel.modelDispositive!)),
-        DataCell(Text(element.orderModel.imeiDispositive!)),
-        DataCell(Text("S/. ${element.orderModel.price}")),
-        DataCell(Text(element.orderModel.nameClient!)),
-        DataCell(Text(getStatus(element.orderModel.status!))),
-        DataCell(Row(
+  Container itemRegistro(OrderViewModel clientViewModel) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      width: double.infinity,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(
-              icon: Icon(element.orderModel.status == 0 ? Icons.check : Icons.delete),
-              onPressed: () {
-                if (element.orderModel.status == 0) {
-                  listOrderViewModel.putStatus(element);
-                  setState(() {
-                    element.orderModel.status = 1;
-                  });
-                } else if (element.orderModel.status == 1) {
-                  listOrderViewModel.deleteOrder(element);
-
-                  setState(() {
-                    data.remove(element);
-                  });
-                }
-              },
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  clientViewModel.orderModel.code!,
+                  style: TextStyle(color: myprimarycolor()),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      clientViewModel.orderModel.service!,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                    space(w: 10),
+                    Text(
+                      clientViewModel.orderModel.dispositive!,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Text(
+                      clientViewModel.orderModel.nameClient!,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    space(w: 10),
+                    Text(
+                      "[${clientViewModel.orderModel.numberClient!}]",
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Text(
+                      clientViewModel.orderModel.marcaDispositive!,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    space(w: 10),
+                    Text(
+                      "[${clientViewModel.orderModel.modelDispositive!}]",
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const IconButton(
-              icon: Icon(Icons.picture_as_pdf),
-              onPressed: null,
-            ),
+            space(w: 20),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      "${clientViewModel.orderModel.price}",
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        clientViewModel.orderModel.status == 0 ? Icons.check : Icons.delete,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        if (clientViewModel.orderModel.status == 0) {
+                          listOrderViewModel
+                              .putStatus(clientViewModel)
+                              .whenComplete(() => setState(() {
+                                    clientViewModel.orderModel.status = 1;
+                                  }));
+                        } else if (clientViewModel.orderModel.status == 1) {
+                          listOrderViewModel
+                              .deleteOrder(clientViewModel)
+                              .whenComplete(() => setState(() {
+                                    listOrderViewModel.list!.remove(clientViewModel);
+                                  }));
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                Text(
+                  getStatus(clientViewModel.orderModel.status!),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            )
           ],
-        ))
-      ]));
+        ),
+      ),
+    );
+  }
+
+  getData(int status, String code) async {
+    switch (status) {
+      case 0:
+        await listOrderViewModel.getOrders();
+        break;
+      case 1:
+        await listOrderViewModel.getOrdersForCode(code);
+        break;
+      default:
     }
-    return rows;
   }
 
   String getStatus(int status) {
@@ -136,7 +238,11 @@ class _OrderPageState extends State<OrderPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text("New Order"),
+              backgroundColor: mynegroprimary(),
+              title: const Text(
+                "New Order",
+                style: TextStyle(color: Colors.white),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -149,7 +255,11 @@ class _OrderPageState extends State<OrderPage> {
                     /**
                    * Page 2 [Datos Cliente]
                    */
-                    if (page == 1) const Text("Client data"),
+                    if (page == 1)
+                      const Text(
+                        "Client data",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     if (page == 1)
                       MyTextFormField(controller: nameClient, style: false, texto: "Name"),
                     if (page == 1)
@@ -160,7 +270,11 @@ class _OrderPageState extends State<OrderPage> {
                     /**
                     * Page 3 [Datos del Celular]
                     */
-                    if (page == 2) const Text("Device data"),
+                    if (page == 2)
+                      const Text(
+                        "Device data",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     if (page == 2)
                       MyTextFormField(controller: marcaDevice, style: false, texto: "Marca"),
                     if (page == 2)
@@ -174,7 +288,11 @@ class _OrderPageState extends State<OrderPage> {
                     /**
                     * Page 4 [Datos de la falla]
                     */
-                    if (page == 3) const Text("Fault data"),
+                    if (page == 3)
+                      const Text(
+                        "Fault data",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     if (page == 3)
                       MyTextFormField(controller: error, style: false, texto: "Diagnosis"),
                     if (page == 3)
@@ -270,8 +388,7 @@ class _OrderPageState extends State<OrderPage> {
   var observation = TextEditingController();
   var price = TextEditingController();
 
-  List<OrderViewModel> data = [];
-  List<String> columns = ["Code", "Marca", "Model", "IMEI", "Price", "Client", "Status", "Actions"];
+  int status = 0;
   var search = TextEditingController();
   ListOrderViewModel listOrderViewModel = ListOrderViewModel();
 }

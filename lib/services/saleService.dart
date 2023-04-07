@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:openrepara_app/models/saleModel.dart';
 import 'package:openrepara_app/services/API.dart';
 import 'package:http/http.dart' as http;
